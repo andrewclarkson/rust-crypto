@@ -1,15 +1,15 @@
 extern crate num;
 
-
-use std::result::Result;
-use std::rand::{task_rng, Rng, TaskRng};
-use num::bigint::{ToBigUint, BigUint, RandBigInt};
+use num::bigint::{ToBigUint, BigUint};
 use num::integer::Integer;
 
-/*
- * Raises 
- *
- */
+/// Raises a number `base` to the exponent `exponent` modulo `modulus` and
+/// returns the result. 
+///
+/// Equivalent to:
+/// ```rust
+/// num::pow(base, exponent) % modulus
+/// ```
 pub fn modular_exp(mut base: BigUint, mut exponent: BigUint, modulus: BigUint) -> BigUint {
 
 
@@ -122,11 +122,5 @@ mod test {
             ), 
             15120u.to_biguint().unwrap()
         );
-
-
-
-
-
     }
-
 }
