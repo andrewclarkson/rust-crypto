@@ -1,10 +1,20 @@
+/// The bulk of the algorithms implemented here can be found in chapter 4 
+/// section 4 of the Handbook of Applied Cryptography. 
+///
+
+
 extern crate num;
 
 use std::rand::task_rng;
 use num::bigint::{ToBigUint, BigUint, RandBigInt};
 use num::integer::Integer;
 
-/// Primes for trial division
+/// Odd primes less than 256
+/// These constants are part of a performance optimization
+/// of the Miller-Rabin primality test. Up to a certain point
+/// trial division is more efficient than the full Miller-Rabin
+/// algorithm. The length of this array should be tuned for optimal
+/// memory vs time balance.
 static primes: [u8, ..53] = [
      3u8,    5u8,   7u8,  11u8,  13u8,  17u8,  19u8,  23u8,  29u8,  31u8,
      37u8,  41u8,  43u8,  47u8,  53u8,  59u8,  61u8,  67u8,  71u8,  73u8, 
@@ -14,19 +24,28 @@ static primes: [u8, ..53] = [
     239u8, 241u8, 251u8
 ];
 
-/// Generates a weak prime
-///
+/// Generates a "weak" prime using a "Random Search" algorithm.
+/// This is a probablistic method meaning it may generate
+/// false primes.
 ///
 pub fn generate_weak_prime(bit_size: uint, security: uint) -> BigUint {
     loop {
         let n = task_rng().gen_biguint(bit_size);
-    
+ 
+        if n.is_even() {
+            continue;
+        }
+
         if probably_prime_faster(&n, security) {
             return n;
         }
     }
 }
 
+/// Test for primality using a hybrid approach
+/// first use trial division then the Miller-Rabin test
+/// Note: this is a probablistic method meaning it may yield
+/// false positives.
 #[inline]
 pub fn probably_prime_faster(n: &BigUint, security: uint) -> bool { 
  
@@ -50,8 +69,15 @@ pub fn probably_prime_faster(n: &BigUint, security: uint) -> bool {
         return false;
 }
 
-/// Generates a strong prime
-///
+/// Generates a strong prime number
+/// Uses Gordon's algoritm to generate a strong prime
+/// defined as:
+/// p - 1 has a large prime factor r
+/// p + 1 has a large prime factor s
+/// r - 1 has a large prime factor t
+/// 
+/// Even though this is "strong" it is still probablistic
+/// thus it may generate composite numbers (false primes)
 ///
 pub fn generate_strong_prime(bit_size: uint, security: uint) -> BigUint {
     
@@ -92,10 +118,9 @@ pub fn generate_strong_prime(bit_size: uint, security: uint) -> BigUint {
 
 }
 
-/// Implements the Miller-Rabin probablistic primality test.
-///
-///
-///
+/// Implements the Miller-Rabin primality test.
+/// This test is probablistic, this it may yield false
+/// positives.
 pub fn probably_prime(candidate: &BigUint, security: uint) -> bool {
     let one = 1u.to_biguint().unwrap(); 
 
@@ -143,6 +168,9 @@ pub fn probably_prime(candidate: &BigUint, security: uint) -> bool {
 
 }
 
+///
+/// Factors a number into a power of two and a remainder
+///
 fn factor_powers_of_two(number: &BigUint) -> (uint, BigUint){
     let mut n = number.clone();
     let mut power = 1u;
@@ -190,7 +218,6 @@ pub fn modular_exp(base: &BigUint, exponent: &BigUint, modulus: &BigUint) -> Big
     }
     result
 }
-
 
 #[cfg(test)]
 mod test {
