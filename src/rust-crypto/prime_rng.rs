@@ -35,35 +35,79 @@ impl <'a>PrimeRng<'a> {
          */
         let candidate = self.generator.gen_biguint(bit_size);
     
+                
+    
+    
+    }
+    
+    /*
+     * Implements the Miller-Rabin probablistic primality test.
+     *
+     *
+     */
+    pub fn probably_prime(&self, candidate: BigUint, security: uint) -> bool {
+
+        let one = 1u.to_biguint().unwrap(); 
+
+        if candidate <= one {
+            return false;
+        }
+
+        let two = 2u.to_biguint().unwrap();
+
+        if candidate == two {
+            return true;
+        }
+
+        if candidate.is_even() {
+            return false;
+        }
+
+        let (power, remainder) = factor_powers_of_two(candidate - one);
+
+        'witness: for i in range(1, security) {
+            let a: BigUint = self.generator.gen_range(two, candidate - one);
         
-    
-    
-    }
-}
+            let mut x = modular_exponent(a, remainder, candidate);
 
-/*
- * Implements the Miller-Rabin probablistic primality test.
- *
- *
- */
-pub fn probably_prime(candidate: BigUint, security: uint) -> bool {
+            if x == one || x == candidate - one {
+                continue 'witness;
+            }
 
-    if candidate <= 1u.to_biguint().unwrap() {
-        return false;
-    }
+            for j in range(1, power) {
+                x = modular_exponent(x, two, candidate);
+                if x == 1 { 
+                    return false;
+                }
+                if x == candidate - one {
+                    continue 'witness;
+                }
+            }
 
-    if candidate == 2u.to_biguint().unwrap() {
+            return false;
+        }
+
         return true;
+
     }
 
-    if candidate.is_even() {
-        return false;
-    }
-
-    
-        
-
+   
 }
+
+fn factor_powers_of_two(mut number: BigUint) -> (BigUint, BigUint){
+    
+    let mut power = 1u.to_biguint().unwrap();
+    let two = 2u.to_biguint().unwrap();
+    loop {
+        number /= two;
+        if number.is_odd() {
+            return (power, number);
+        }
+        power += 1;
+    }
+}
+
+
 
 
 /*
