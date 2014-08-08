@@ -25,15 +25,17 @@ impl TlsClientHello {
 
 struct TlsRandom {
     time: u32,
-    bytes: &[u8, ..28]
+    bytes: [u8, ..28]
 }
 
 impl TlsRandom {
-    pub fn new() -> TlsRandom {
-        TlsRandom {
-            time: time::now_utc().to_timespec().sec as u32    
-            bytes: 
-        }
+    fn new() -> TlsRandom {
+        let mut random = TlsRandom {
+            time: time::now_utc().to_timespec().sec as u32,
+            bytes: [0, ..28]
+        };
+        task_rng().fill_bytes(random.bytes);
+        random
     }
 }
 
@@ -44,8 +46,7 @@ struct TlsClient {
 impl TlsClient {
 
     /*!
-     * 
-     *
+     * Wraps the TCP stream using TLS
      */
     pub fn wrap(stream: TcpStream) -> IoResult<> {
         let client = TlsClient {
